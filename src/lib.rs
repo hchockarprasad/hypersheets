@@ -4,7 +4,7 @@ use web_sys::{console, window, HtmlElement};
 
 mod helpers;
 mod rectangle;
-use helpers::dom::element::DomHelper;
+use helpers::dom::element::ElementHelper;
 use rectangle::Point;
 
 #[wasm_bindgen]
@@ -18,7 +18,7 @@ pub fn start() {
         .dyn_into::<HtmlElement>()
         .unwrap();
     let offset = canvas.offset();
-    console::log_1(&format!("Top {}, Left {}", offset.top, offset.left).into());
+    // console::log_1(&format!("Top {}, Left {}", offset.top, offset.left).into());
     let pt = Point::new(10, 10);
 }
 

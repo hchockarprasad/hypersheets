@@ -18,8 +18,10 @@ features = [
   'Window',
   'Document',
   'HtmlElement',
+  'HtmlInputElement',
   'Element',
   'Node',
   'CssStyleDeclaration',
+  'Selection',
 ]
 
