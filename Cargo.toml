@@ -20,5 +20,6 @@ features = [
   'HtmlElement',
   'Element',
   'Node',
+  'CssStyleDeclaration',
 ]
 
