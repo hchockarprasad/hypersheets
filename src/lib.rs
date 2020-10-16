@@ -1,25 +1,23 @@
+#[macro_use]
+extern crate lazy_static;
+
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{console, window, HtmlElement};
 
 mod helpers;
+mod hypersheet;
 mod rectangle;
 use helpers::dom::element::ElementHelper;
+use hypersheet::HyperSheet;
 use rectangle::Point;
+use std::collections::HashMap;
 
 #[wasm_bindgen]
 pub fn start() {
-    let window = window().expect("No global window exist");
-    let document = window.document().expect("Should have a doc on window");
-    let body = document.body().expect("Document should have a body");
-    let canvas = document
-        .get_element_by_id("rustcanvas")
-        .unwrap()
-        .dyn_into::<HtmlElement>()
-        .unwrap();
-    let offset = canvas.offset();
-    // console::log_1(&format!("Top {}, Left {}", offset.top, offset.left).into());
-    let pt = Point::new(10, 10);
+    let sheet_no = 1;
+    let mut sheet = HyperSheet::new("container");
+    console::log_1(&"Sheet found".into());
 }
 
 #[cfg(test)]
