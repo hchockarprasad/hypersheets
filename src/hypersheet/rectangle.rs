@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::cmp;
 
 pub trait Within {
   fn within(&self, rect: Rectangle) -> bool;
@@ -253,5 +252,63 @@ impl Rectangle {
 impl Within for Rectangle {
   fn within(&self, rect: Rectangle) -> bool {
     rect.origin.lte(self.origin) && rect.corner.gte(self.corner)
+  }
+}
+
+pub struct BoundingRect {
+  x: f64,
+  y: f64,
+  top: f64,
+  right: f64,
+  bottom: f64,
+  left: f64,
+  width: f64,
+  height: f64,
+}
+
+impl BoundingRect {
+  pub fn new(x: f64, y: f64, top: f64, right: f64, bottom: f64, left: f64, width: f64, height: f64) -> Self {
+    BoundingRect {
+      x,
+      y,
+      top,
+      right,
+      bottom,
+      left,
+      width,
+      height,
+    }
+  }
+
+  pub fn x(&self) -> f64 {
+    self.x
+  }
+
+  pub fn y(&self) -> f64 {
+    self.y
+  }
+
+  pub fn top(&self) -> f64 {
+    self.top
+  }
+
+  pub fn right(&self) -> f64 {
+    self.right
+  }
+
+  pub fn bottom(&self) -> f64 {
+    self.bottom
+  }
+
+  pub fn left(&self) -> f64 {
+    self.left
+  }
+
+  pub fn width(&self) -> f64 {
+    self.width
+  }
+
+  pub fn height(&self) -> f64 {
+    self.height
   }
 }

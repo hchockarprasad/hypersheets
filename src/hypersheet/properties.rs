@@ -1,12 +1,4 @@
-use js_sys::Array;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use web_sys::{window, HtmlElement, MouseEvent};
-
-use super::*;
-
-pub struct HyperSheet {
-  container: HtmlElement,
+pub struct HyperSheetProperties {
   no_date_message: String,
   wheel_h_factor: f32,
   wheel_v_factor: f32,
@@ -139,18 +131,9 @@ pub struct HyperSheet {
   truncate_text_with_ellipsis: bool,
 }
 
-impl HyperSheet {
-  pub fn new(container_name: &str) -> Self {
-    let window = window().expect("No global window exist");
-    let document = window.document().expect("Should have a doc on window");
-    let mut container = document
-      .get_element_by_id(container_name)
-      .unwrap()
-      .dyn_into::<HtmlElement>()
-      .unwrap();
-    HyperSheet::init_container(&mut container);
-    HyperSheet {
-      container,
+impl HyperSheetProperties {
+  pub fn default() -> Self {
+    Self {
       no_date_message: "No items to display".to_string(),
       wheel_h_factor: 0.01,
       wheel_v_factor: 0.01,
@@ -283,19 +266,4 @@ impl HyperSheet {
       truncate_text_with_ellipsis: true,
     }
   }
-
-  fn init_container(container: &mut HtmlElement) {
-    let closure = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
-      event.stop_propagation();
-      event.prevent_default();
-    }) as Box<dyn FnMut(_)>);
-    container.set_oncontextmenu(Some(closure.as_ref().unchecked_ref()));
-    closure.forget();
-    container.remove_attribute("tabindex").unwrap();
-    let class_list = Array::new();
-    class_list.set(0, "hypersheet-container".into());
-    container.class_list().add(&class_list).unwrap();
-  }
-
-  fn inject_css(&self) {}
 }
