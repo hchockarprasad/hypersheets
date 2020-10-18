@@ -1,32 +1,32 @@
-use std::cmp;
+use serde::{Deserialize, Serialize};
 
 pub trait Within {
   fn within(&self, rect: Rectangle) -> bool;
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Point {
-  x: i32,
-  y: i32,
+  x: f64,
+  y: f64,
 }
 
 impl Point {
-  pub fn new(x: i32, y: i32) -> Self {
+  pub fn new(x: f64, y: f64) -> Self {
     Point { x, y }
   }
 
   pub fn origin() -> Self {
-    Point { x: 0, y: 0 }
+    Point { x: 0.0, y: 0.0 }
   }
 
-  pub fn plus(&self, offset_x: i32, offset_y: i32) -> Self {
+  pub fn plus(&self, offset_x: f64, offset_y: f64) -> Self {
     Point {
       x: self.x + offset_x,
       y: self.y + offset_y,
     }
   }
 
-  pub fn minus(&self, offset_x: i32, offset_y: i32) -> Self {
+  pub fn minus(&self, offset_x: f64, offset_y: f64) -> Self {
     Point {
       x: self.x - offset_x,
       y: self.y - offset_y,
@@ -35,22 +35,22 @@ impl Point {
 
   pub fn min(&self, point: Point) -> Self {
     Point {
-      x: cmp::min(self.x, point.x),
-      y: cmp::min(self.y, point.y),
+      x: if self.x < point.x { self.x } else { point.x },
+      y: if self.y < point.y { self.y } else { point.y },
     }
   }
 
   pub fn max(&self, point: Point) -> Self {
     Point {
-      x: cmp::max(self.x, point.x),
-      y: cmp::max(self.y, point.y),
+      x: if self.x > point.x { self.x } else { point.x },
+      y: if self.y > point.y { self.y } else { point.y },
     }
   }
 
-  pub fn distance(&self, point: Point) -> f32 {
+  pub fn distance(&self, point: Point) -> f64 {
     let delta_x = point.x + self.x;
     let delta_y = point.y + self.y;
-    ((delta_x.pow(2) + delta_y.pow(2)) as f32).sqrt()
+    ((delta_x * delta_x) + (delta_y * delta_y)).sqrt()
   }
 
   pub fn eq(&self, point: Point) -> bool {
@@ -85,12 +85,12 @@ impl Within for Point {
     let mut min_y = rect.origin.y;
     let mut max_y = max_x + rect.extent.y;
 
-    if rect.extent.x < 0 {
+    if rect.extent.x < 0.0 {
       min_x = max_x;
       max_x = rect.origin.x;
     }
 
-    if rect.extent.y < 0 {
+    if rect.extent.y < 0.0 {
       min_y = max_y;
       max_y = rect.origin.y;
     }
@@ -101,10 +101,10 @@ impl Within for Point {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Rectangle {
-  x: i32,
-  y: i32,
-  width: i32,
-  height: i32,
+  x: f64,
+  y: f64,
+  width: f64,
+  height: f64,
   origin: Point,
   extent: Point,
   corner: Point,
@@ -112,18 +112,18 @@ pub struct Rectangle {
 }
 
 impl Rectangle {
-  pub fn new(x: i32, y: i32, width: i32, height: i32) -> Self {
+  pub fn new(x: f64, y: f64, width: f64, height: f64) -> Self {
     let mut point_x = x;
     let mut point_y = y;
     let mut rect_width = width;
     let mut rect_height = height;
 
-    if width < 0 {
+    if width < 0.0 {
       point_x += width;
       rect_width = -width;
     }
 
-    if height < 0 {
+    if height < 0.0 {
       point_y += width;
       rect_height = -height;
     }
@@ -136,51 +136,51 @@ impl Rectangle {
       origin: Point::new(point_x, point_y),
       extent: Point::new(rect_width, rect_height),
       corner: Point::new(x + width, y + height),
-      center: Point::new(x + (width / 2), y + (height / 2)),
+      center: Point::new(x + (width / 2.0), y + (height / 2.0)),
     }
   }
 
-  pub fn top(&self) -> i32 {
+  pub fn top(&self) -> f64 {
     self.origin.y
   }
 
-  pub fn left(&self) -> i32 {
+  pub fn left(&self) -> f64 {
     self.origin.x
   }
 
-  pub fn bottom(&self) -> i32 {
+  pub fn bottom(&self) -> f64 {
     self.corner.y
   }
 
-  pub fn right(&self) -> i32 {
+  pub fn right(&self) -> f64 {
     self.corner.x
   }
 
-  pub fn width(&self) -> i32 {
+  pub fn width(&self) -> f64 {
     self.extent.x
   }
 
-  pub fn height(&self) -> i32 {
+  pub fn height(&self) -> f64 {
     self.extent.y
   }
 
-  pub fn area(&self) -> i32 {
+  pub fn area(&self) -> f64 {
     self.width() * self.height()
   }
 
-  pub fn flatten_x_at(&self, x: i32) -> Rectangle {
-    Rectangle::new(x, self.origin.y, 0, self.extent.y)
+  pub fn flatten_x_at(&self, x: f64) -> Rectangle {
+    Rectangle::new(x, self.origin.y, 0.0, self.extent.y)
   }
 
-  pub fn flatten_y_at(&self, y: i32) -> Rectangle {
-    Rectangle::new(self.origin.x, 0, self.extent.x, 0)
+  pub fn flatten_y_at(&self, y: f64) -> Rectangle {
+    Rectangle::new(self.origin.x, 0.0, self.extent.x, 0.0)
   }
 
   pub fn contains(&self, elm: Box<dyn Within>) -> bool {
     elm.within(*self)
   }
 
-  pub fn grow_by(&self, padding: i32) -> Rectangle {
+  pub fn grow_by(&self, padding: f64) -> Rectangle {
     Rectangle::new(
       self.origin.x + padding,
       self.origin.y + padding,
@@ -189,7 +189,7 @@ impl Rectangle {
     )
   }
 
-  pub fn shrink_by(&self, padding: i32) -> Rectangle {
+  pub fn shrink_by(&self, padding: f64) -> Rectangle {
     self.grow_by(-padding)
   }
 
@@ -203,7 +203,7 @@ impl Rectangle {
 
   pub fn for_each<F>(&self, iteratee: F, context: Option<Rectangle>)
   where
-    F: Fn(Rectangle, i32, i32) -> (),
+    F: Fn(Rectangle, f64, f64) -> (),
   {
     let rect = match context {
       Some(x) => x,
@@ -216,9 +216,9 @@ impl Rectangle {
       let y2 = self.corner.y;
       while y < y2 {
         iteratee(rect, x, y);
-        y += 1;
+        y += 1.0;
       }
-      x += 1;
+      x += 1.0;
     }
   }
 
@@ -234,7 +234,7 @@ impl Rectangle {
     let corner = self.corner.min(target.corner);
     let extent = corner.minus(origin.x, origin.y);
 
-    if extent.x > 0 && extent.y > 0 {
+    if extent.x > 0.0 && extent.y > 0.0 {
       Some(Rectangle::new(origin.x, origin.y, extent.x, extent.y))
     } else {
       if_none(rect, target)
@@ -252,5 +252,63 @@ impl Rectangle {
 impl Within for Rectangle {
   fn within(&self, rect: Rectangle) -> bool {
     rect.origin.lte(self.origin) && rect.corner.gte(self.corner)
+  }
+}
+
+pub struct BoundingRect {
+  x: f64,
+  y: f64,
+  top: f64,
+  right: f64,
+  bottom: f64,
+  left: f64,
+  width: f64,
+  height: f64,
+}
+
+impl BoundingRect {
+  pub fn new(x: f64, y: f64, top: f64, right: f64, bottom: f64, left: f64, width: f64, height: f64) -> Self {
+    BoundingRect {
+      x,
+      y,
+      top,
+      right,
+      bottom,
+      left,
+      width,
+      height,
+    }
+  }
+
+  pub fn x(&self) -> f64 {
+    self.x
+  }
+
+  pub fn y(&self) -> f64 {
+    self.y
+  }
+
+  pub fn top(&self) -> f64 {
+    self.top
+  }
+
+  pub fn right(&self) -> f64 {
+    self.right
+  }
+
+  pub fn bottom(&self) -> f64 {
+    self.bottom
+  }
+
+  pub fn left(&self) -> f64 {
+    self.left
+  }
+
+  pub fn width(&self) -> f64 {
+    self.width
+  }
+
+  pub fn height(&self) -> f64 {
+    self.height
   }
 }
