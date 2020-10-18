@@ -14,17 +14,17 @@ impl DataModel {
     }
   }
 
+  fn zero_pad_index(&self, idx: usize, padding_size: u8) -> String {
+    let mut key = idx.to_string();
+    while key.len() <= padding_size as usize {
+      key = ["0".to_string(), key].concat();
+    }
+    key
+  }
+
   pub fn set_value(&mut self, row_idx: usize, col_idx: usize, value: String) {
-    let max_row_digits = 5;
-    let max_col_digits = 3;
-    let mut row_key = row_idx.to_string();
-    let mut col_key = col_idx.to_string();
-    while row_key.len() <= max_row_digits {
-      row_key = ["0".to_string(), row_key].concat();
-    }
-    while col_key.len() <= max_col_digits {
-      col_key = ["0".to_string(), col_key].concat();
-    }
+    let row_key = self.zero_pad_index(row_idx, 5);
+    let col_key = self.zero_pad_index(col_idx, 3);
     let key = [row_key, "x".to_string(), col_key].concat();
     self.items.insert(key, value);
   }
@@ -38,11 +38,7 @@ impl DataModel {
   }
 
   pub fn get_row(&self, row_idx: usize) -> BTreeMap<String, String> {
-    let max_row_digits = 5;
-    let mut row_key = row_idx.to_string();
-    while row_key.len() <= max_row_digits {
-      row_key = ["0".to_string(), row_key].concat();
-    }
+    let row_key = self.zero_pad_index(row_idx, 5);
     let key = [row_key, "x".to_string()].concat();
     let key2 = key.clone();
     let mut set = BTreeMap::new();
@@ -64,7 +60,7 @@ mod tests {
     fn data_model() {
       let mut dm = DataModel::new();
       dm.set_value(1, 1, "Cell A".to_string());
-      dm.set_value(10, 4, "Cell D".to_string());
+      dm.set_value(1, 4, "Cell D".to_string());
       dm.set_value(1, 3, "Cell C".to_string());
       dm.set_value(1, 2, "Cell B".to_string());
       let row = dm.get_row(1);
