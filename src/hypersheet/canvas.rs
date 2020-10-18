@@ -26,7 +26,7 @@ impl CanvasHelper for HtmlCanvasElement {
 }
 
 pub struct Canvas {
-  element: HtmlCanvasElement,
+  pub element: HtmlCanvasElement,
   info_element: HtmlElement,
   mouse_location: Point,
 }
