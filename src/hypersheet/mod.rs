@@ -1,26 +1,25 @@
 mod rectangle;
 
 mod canvas;
+mod cell;
 mod celleditor;
 mod events;
+mod model;
 mod properties;
 mod scroll;
-mod model;
 
-use model::DataModel;
 use canvas::{Canvas, CanvasHelper};
-use scroll::ScrollBar;
 use celleditor::CellEditor;
 use events::{CustomEvent, CustomEventDetail, MousePosition};
 use js_sys::Array;
+use model::DataModel;
 use properties::HyperSheetProperties;
+use scroll::ScrollBar;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{console, window, HtmlElement, MouseEvent};
 
-struct CellEvent {
-
-}
+struct CellEvent {}
 
 enum Edge {
   Top,
@@ -123,15 +122,18 @@ impl HyperSheet {
       Empty => (self.properties.grid_border, [style_prefix, ""].concat()),
     };
     let border = match prop_name {
-      true => [self.properties.fixed_lines_hwidth.to_string(), "px solid".to_string(), self.properties.grid_lines_hcolor.clone()].concat(),
-      false => "".to_string()
+      true => [
+        self.properties.fixed_lines_hwidth.to_string(),
+        "px solid".to_string(),
+        self.properties.grid_lines_hcolor.clone(),
+      ]
+      .concat(),
+      false => "".to_string(),
     };
     self.canvas.element.style().set_property("border", &border).unwrap();
   }
 
-  fn get_scroll_top(&self) {
-
-  }
+  fn get_scroll_top(&self) {}
 
   fn compute_cell_bounds(&self) {
     self.get_scroll_top();

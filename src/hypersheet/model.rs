@@ -5,13 +5,9 @@ pub struct DataModel {
   pub items: BTreeMap<String, String>,
 }
 
-
-
 impl DataModel {
   pub fn new() -> Self {
-    Self {
-      items: BTreeMap::new()
-    }
+    Self { items: BTreeMap::new() }
   }
 
   fn zero_pad_index(&self, idx: usize, padding_size: u8) -> String {
@@ -33,7 +29,7 @@ impl DataModel {
     let key = [row_idx.to_string(), "x".to_string(), col_idx.to_string()].concat();
     match self.items.get(&key) {
       Some(x) => x.to_string(),
-      None => "".to_string()
+      None => "".to_string(),
     }
   }
 
@@ -51,20 +47,4 @@ impl DataModel {
   pub fn get_all(&self) -> BTreeMap<String, String> {
     self.items.clone()
   }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-    #[test]
-    fn data_model() {
-      let mut dm = DataModel::new();
-      dm.set_value(1, 1, "Cell A".to_string());
-      dm.set_value(1, 4, "Cell D".to_string());
-      dm.set_value(1, 3, "Cell C".to_string());
-      dm.set_value(1, 2, "Cell B".to_string());
-      let row = dm.get_row(1);
-      println!("{:?}", row);
-      assert_eq!(2 + 2, 4);
-    }
 }
