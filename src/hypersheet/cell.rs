@@ -1,5 +1,3 @@
-use std::char::from_digit;
-
 pub struct Cell {
   row_idx: u16,
   col_idx: u8,
@@ -8,7 +6,7 @@ pub struct Cell {
 }
 
 impl Cell {
-  pub fn new(row_idx: u16, col_idx: u8) -> Self {
+  pub fn new(col_idx: u8, row_idx: u16) -> Self {
     Self {
       row_idx,
       col_idx,
@@ -30,18 +28,31 @@ impl Cell {
     column_name
   }
 
-  fn name(&self) -> String {
+  pub fn name(&self) -> String {
     [self.get_column_name(), self.row_idx.to_string()].concat()
   }
-}
 
-#[cfg(test)]
-mod tests {
-  use super::*;
-  #[test]
-  fn new_cell() {
-    let mut cell = Cell::new(65535, 255);
-    println!("{}", cell.get_column_name());
-    println!("{}", cell.name());
+  pub fn get_col_idx(&self) -> u8 {
+    self.col_idx
+  }
+
+  pub fn get_row_idx(&self) -> u16 {
+    self.row_idx
+  }
+
+  pub fn get_width(&self) -> usize {
+    self.width
+  }
+
+  pub fn get_height(&self) -> usize {
+    self.height
+  }
+
+  pub fn set_width(&mut self, width: usize) {
+    self.width = width;
+  }
+
+  pub fn set_height(&mut self, height: usize) {
+    self.height = height;
   }
 }

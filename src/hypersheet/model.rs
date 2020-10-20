@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 
-#[derive(Debug)]
+use super::cell::Cell;
+
 pub struct DataModel {
-  pub items: BTreeMap<String, String>,
+  pub items: BTreeMap<String, Cell>,
 }
 
 impl DataModel {
@@ -10,41 +11,24 @@ impl DataModel {
     Self { items: BTreeMap::new() }
   }
 
-  fn zero_pad_index(&self, idx: usize, padding_size: u8) -> String {
-    let mut key = idx.to_string();
-    while key.len() <= padding_size as usize {
-      key = ["0".to_string(), key].concat();
-    }
-    key
+  pub fn set_cell(&mut self, cell: Cell) {
+    self.items.insert(cell.name(), cell);
   }
 
-  pub fn set_value(&mut self, row_idx: usize, col_idx: usize, value: String) {
-    let row_key = self.zero_pad_index(row_idx, 5);
-    let col_key = self.zero_pad_index(col_idx, 3);
-    let key = [row_key, "x".to_string(), col_key].concat();
-    self.items.insert(key, value);
+  pub fn get_cell(&self, col_idx: u8, row_idx: u16) -> Option<&Cell> {
+    let cell = Cell::new(col_idx, row_idx);
+    self.items.get(&cell.name())
   }
 
-  pub fn get_value(&self, row_idx: usize, col_idx: usize) -> String {
-    let key = [row_idx.to_string(), "x".to_string(), col_idx.to_string()].concat();
-    match self.items.get(&key) {
-      Some(x) => x.to_string(),
-      None => "".to_string(),
-    }
+  pub fn get_cells_within(&self, col_idx: u8, row_idx: u16) -> Vec<&Cell> {
+    self.items.values().filter(|x| x.get_col_idx() <= col_idx && x.get_row_idx() <= row_idx).collect()
   }
 
-  pub fn get_row(&self, row_idx: usize) -> BTreeMap<String, String> {
-    let row_key = self.zero_pad_index(row_idx, 5);
-    let key = [row_key, "x".to_string()].concat();
-    let key2 = key.clone();
-    let mut set = BTreeMap::new();
-    for (k, v) in self.items.range(key..).take_while(|x| x.0.starts_with(&key2)) {
-      set.insert(k.clone(), v.clone());
-    }
-    set
+  pub fn get_cells_within_rows(&self, row_idx: u16) -> Vec<&Cell> {
+    self.items.values().filter(|x| x.get_row_idx() <= row_idx).collect()
   }
 
-  pub fn get_all(&self) -> BTreeMap<String, String> {
-    self.items.clone()
+  pub fn get_cells_within_cols(&self, col_idx: u8) -> Vec<&Cell> {
+    self.items.values().filter(|x| x.get_col_idx() <= col_idx).collect()
   }
 }
