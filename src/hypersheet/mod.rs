@@ -6,28 +6,38 @@ mod celleditor;
 mod events;
 mod model;
 mod properties;
+mod row;
 mod scroll;
 
-use cell::Cell;
 use canvas::{Canvas, CanvasHelper};
+use cell::Cell;
 use celleditor::CellEditor;
 use events::{CustomEvent, CustomEventDetail, MousePosition};
 use js_sys::Array;
 use model::DataModel;
 use properties::HyperSheetProperties;
+use row::{Row, RowManager};
 use scroll::ScrollBar;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 pub struct HyperSheet {
-  data_model: DataModel
+  data_model: DataModel,
+  row_manager: RowManager,
 }
 
 impl HyperSheet {
   pub fn new() -> Self {
     let data_model = DataModel::new();
+    let row_manager = RowManager::new();
     Self {
-      data_model: data_model,
+      data_model,
+      row_manager,
+    }
+  }
+  pub fn update_row_manager(&mut self, rows: Vec<Row>) {
+    for row in rows {
+      self.row_manager.set_row(row);
     }
   }
 
@@ -37,14 +47,41 @@ impl HyperSheet {
     }
   }
 
-  pub fn get_last_visible_row(&self, row_offset: u16) {
-    let mut rows: u16 = row_offset / 20;
-    let mut offset = (row_offset - rows * 20) as usize;
-    let cells = self.data_model.get_cells_within_rows(rows);
-    for cell in cells {
-      offset = offset + cell.get_height() - 20;
+  pub fn get_row_with_idx(&self, idx: u16) -> Option<&Row> {
+    self.row_manager.get_row(idx)
+  }
+
+  pub fn get_last_visible_row_idx(&self, row_offset: usize) -> u16 {
+    let mut row_count: u16 = (row_offset / 20) as u16;
+    let mut offset = row_offset;
+    let rows = self.row_manager.get_rows_within(row_count);
+    for row in rows {
+      offset = offset + row.get_height() as usize - 20;
     }
-    println!("{}", offset);
+    if offset > row_offset {
+      loop {
+        offset = match self.get_row_with_idx(row_count) {
+          Some(row) => offset - row.get_height() as usize,
+          None => offset - 20,
+        };
+        row_count -= 1;
+        if offset < row_offset {
+          break;
+        }
+      }
+    } else if offset < row_offset {
+      loop {
+        offset = match self.get_row_with_idx(row_count + 1) {
+          Some(row) => offset + row.get_height() as usize,
+          None => offset + 20,
+        };
+        if offset > row_offset {
+          break;
+        }
+        row_count += 1;
+      }
+    }
+    row_count
   }
 }
 
@@ -52,14 +89,14 @@ impl HyperSheet {
 mod tests {
   use super::*;
   #[test]
-  fn test_cell() {
+  fn test_rows() {
     let mut sheet = HyperSheet::new();
-    let mut cell1 = Cell::new(1, 1);
-    cell1.set_height(40);
-    let mut cell2 = Cell::new(1, 2);
-    cell2.set_height(10);
-    sheet.add_cells(vec![cell1, cell2]);
-    sheet.get_last_visible_row(4010);
+    let mut row1 = Row::new(1);
+    row1.set_height(10);
+    let mut row2 = Row::new(2);
+    row2.set_height(10);
+    sheet.update_row_manager(vec![row1, row2]);
+    let x = sheet.get_last_visible_row_idx(4010);
+    println!("{}", x);
   }
 }
-
