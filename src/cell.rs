@@ -1,8 +1,12 @@
+use super::Rectangle;
+
+#[derive(Debug, Copy, Clone)]
 pub struct Cell {
   row_idx: u16,
   col_idx: u8,
   width: usize,
   height: usize,
+  boundary: Option<Rectangle>,
 }
 
 impl Cell {
@@ -12,6 +16,7 @@ impl Cell {
       col_idx,
       width: 20,
       height: 20,
+      boundary: None,
     }
   }
 
@@ -54,5 +59,13 @@ impl Cell {
 
   pub fn set_height(&mut self, height: usize) {
     self.height = height;
+  }
+
+  pub fn set_bounday(&mut self, boundary: Rectangle) {
+    self.boundary = Some(boundary)
+  }
+
+  pub fn get_boundary(&mut self) -> Option<Rectangle> {
+    self.boundary
   }
 }

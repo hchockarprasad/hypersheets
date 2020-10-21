@@ -1,4 +1,3 @@
-use super::super::*;
 use super::*;
 use rectangle::{BoundingRect, Point};
 
