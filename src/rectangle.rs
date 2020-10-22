@@ -348,3 +348,17 @@ impl BoundingRect {
     self.height
   }
 }
+
+#[cfg(test)]
+mod tests {
+
+  use super::Rectangle;
+  #[test]
+  fn intersect() {
+    let rec1 = Rectangle::new(0.0, 0.0, 100.0, 100.0);
+    let rec2 = Rectangle::new(1.0, 1.0, 100.0, 100.0);
+    let rec3 = rec1.intersect(rec2, |a, b| None, None);
+    println!("{:?}", rec3);
+    assert_eq!(2 + 2, 4);
+  }
+}

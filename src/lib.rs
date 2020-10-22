@@ -50,7 +50,7 @@ impl HyperSheet {
         let data_model = DataModel::new();
         let row_manager = RowManager::new();
         let col_manager = ColumnManager::new();
-        Self {
+        let instance = Self {
             data_model,
             row_manager,
             col_manager,
@@ -60,12 +60,9 @@ impl HyperSheet {
             placeholder,
             scroller,
             active_cell: None,
-        }
-    }
-
-    #[wasm_bindgen]
-    pub fn arrow_down(&self) {
-        web_sys::console::log_1(&"hello".into());
+        };
+        instance.paint();
+        instance
     }
 
     fn update_row_manager(&mut self, rows: Vec<Row>) {
@@ -187,6 +184,14 @@ impl HyperSheet {
         Rectangle::new(left, top, 560.0, 380.0)
     }
 
+    fn get_container_bounds(&self) -> Rectangle {
+        Rectangle::new(0.0, 0.0, 560.0, 380.0)
+    }
+
+    fn get_canvas_bounds(&self) -> Rectangle {
+        Rectangle::new(0.0, 0.0, 600.0, 400.0)
+    }
+
     fn move_placeholder_right(&mut self) {
         let (next_col_idx, next_row_idx, boundary) = match self.active_cell {
             Some(mut cell) => {
@@ -214,6 +219,7 @@ impl HyperSheet {
         if diff > 0.0 {
             self.scroller
                 .set_scroll_left(self.get_scroller_bounds().left() as i32 + diff as i32);
+            self.paint();
         }
     }
 
@@ -243,6 +249,7 @@ impl HyperSheet {
         if diff < 0.0 {
             self.scroller
                 .set_scroll_left(self.get_scroller_bounds().left() as i32 + diff as i32);
+            self.paint();
         }
     }
 
@@ -272,6 +279,7 @@ impl HyperSheet {
         if diff < 0.0 {
             self.scroller
                 .set_scroll_top(self.get_scroller_bounds().top() as i32 + diff as i32);
+            self.paint();
         }
     }
 
@@ -302,10 +310,80 @@ impl HyperSheet {
         if diff > 0.0 {
             self.scroller
                 .set_scroll_top(self.get_scroller_bounds().top() as i32 + diff as i32);
+            self.paint();
         }
     }
 
-    fn paint(&self) {}
+    fn paint(&self) {
+        let top = self.get_scroller_bounds().top();
+        let left = self.get_scroller_bounds().left();
+        let (row_idx, row_offset) = self.get_last_visible_row(top as usize);
+        let (col_idx, col_offset) = self.get_last_visible_col(left as usize);
+        let ctx: web_sys::CanvasRenderingContext2d =
+            self.canvas.get_context("2d").unwrap().unwrap().dyn_into().unwrap();
+        let cb = self.get_canvas_bounds();
+        ctx.clear_rect(cb.left(), cb.top(), cb.right(), cb.bottom());
+        ctx.set_fill_style(&"#000000".into());
+        let mut row_offset = top - row_offset as f64 + 20.0;
+        // web_sys::console::log_1(&left.to_string().into());
+        // web_sys::console::log_1(&col_offset.to_string().into());
+        let mut col_offset = left - col_offset as f64 + 40.0;
+        let mut row_idx = row_idx + 1;
+        let mut col_idx = col_idx + 1;
+        loop {
+            let height = match self.row_manager.get_row(row_idx) {
+                Some(rw) => rw.get_height(),
+                None => 20,
+            };
+
+            let new_offset = height as f64 + row_offset;
+            if new_offset <= cb.bottom() {
+                ctx.begin_path();
+                ctx.rect(0.0, row_offset, 40.0, 20.0);
+                ctx.stroke();
+                ctx.fill_text(&row_idx.to_string(), 5.0, row_offset + 15.0).unwrap();
+                ctx.begin_path();
+                ctx.set_line_width(0.3);
+                ctx.set_stroke_style(&"#000000".into());
+                ctx.move_to(40.0, new_offset);
+                ctx.line_to(cb.right(), new_offset);
+                ctx.stroke();
+                row_idx += 1;
+                row_offset = new_offset;
+            } else {
+                break;
+            }
+        }
+
+        loop {
+            let width = match self.col_manager.get_column(col_idx) {
+                Some(rw) => rw.get_width(),
+                None => 85,
+            };
+
+            let new_offset = width as f64 + col_offset;
+            ctx.begin_path();
+            ctx.rect(col_offset, 0.0, 85.0, 20.0);
+            ctx.stroke();
+            ctx.fill_text(&col_idx.to_string(), col_offset + 40.0, 15.0).unwrap();
+            ctx.begin_path();
+            ctx.set_line_width(0.3);
+            ctx.set_stroke_style(&"#000000".into());
+            ctx.move_to(new_offset, 20.0);
+            ctx.line_to(new_offset, cb.bottom());
+            ctx.stroke();
+            if new_offset <= cb.right() {
+                col_idx += 1;
+                col_offset = new_offset;
+            } else {
+                break;
+            }
+        }
+
+        ctx.begin_path();
+        ctx.set_fill_style(&"#dbdbdb".into());
+        ctx.fill_rect(0.0, 0.0, 40.0, 20.0);
+    }
 
     pub fn on_right_arrow_keydown(&mut self, event: web_sys::KeyboardEvent) {
         self.move_placeholder_right();
@@ -321,5 +399,23 @@ impl HyperSheet {
 
     pub fn on_down_arrow_keydown(&mut self, event: web_sys::KeyboardEvent) {
         self.move_placeholder_down();
+    }
+
+    pub fn on_click(&mut self, event: web_sys::MouseEvent) {
+        let (row_idx, row_offset) = self.get_last_visible_row(event.offset_y() as usize);
+        let (col_idx, col_offset) = self.get_last_visible_col(event.offset_x() as usize);
+        self.placeholder
+            .style()
+            .set_property("top", &[row_offset.to_string(), "px".to_string()].concat())
+            .unwrap();
+        self.placeholder
+            .style()
+            .set_property("left", &[col_offset.to_string(), "px".to_string()].concat())
+            .unwrap();
+        let mut cell = Cell::new(col_idx + 1, row_idx + 1);
+        let (width, height) = self.get_cell_dimension(col_idx + 1, row_idx + 1);
+        let boundary = Rectangle::new(col_offset as f64, row_offset as f64, width as f64, height as f64);
+        cell.set_boundary(boundary);
+        self.active_cell = Some(cell);
     }
 }

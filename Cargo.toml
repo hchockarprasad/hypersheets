@@ -32,6 +32,7 @@ features = [
   'DomRect',
   'CustomEvent',
   'CustomEventInit',
-  'KeyboardEvent'
+  'KeyboardEvent',
+  'CanvasRenderingContext2d'
 ]
 
