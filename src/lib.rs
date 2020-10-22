@@ -324,10 +324,8 @@ impl HyperSheet {
         let cb = self.get_canvas_bounds();
         ctx.clear_rect(cb.left(), cb.top(), cb.right(), cb.bottom());
         ctx.set_fill_style(&"#000000".into());
-        let mut row_offset = top - row_offset as f64 + 20.0;
-        // web_sys::console::log_1(&left.to_string().into());
-        // web_sys::console::log_1(&col_offset.to_string().into());
-        let mut col_offset = left - col_offset as f64 + 40.0;
+        let mut row_offset = row_offset as f64 - top + 20.0;
+        let mut col_offset = col_offset as f64 - left + 40.0;
         let mut row_idx = row_idx + 1;
         let mut col_idx = col_idx + 1;
         loop {
@@ -385,20 +383,30 @@ impl HyperSheet {
         ctx.fill_rect(0.0, 0.0, 40.0, 20.0);
     }
 
-    pub fn on_right_arrow_keydown(&mut self, event: web_sys::KeyboardEvent) {
+    pub fn on_right_arrow_keydown(&mut self, _: web_sys::KeyboardEvent) {
         self.move_placeholder_right();
     }
 
-    pub fn on_left_arrow_keydown(&mut self, event: web_sys::KeyboardEvent) {
+    pub fn on_left_arrow_keydown(&mut self, _: web_sys::KeyboardEvent) {
         self.move_placeholder_left();
     }
 
-    pub fn on_up_arrow_keydown(&mut self, event: web_sys::KeyboardEvent) {
+    pub fn on_up_arrow_keydown(&mut self, _: web_sys::KeyboardEvent) {
         self.move_placeholder_top();
     }
 
-    pub fn on_down_arrow_keydown(&mut self, event: web_sys::KeyboardEvent) {
+    pub fn on_down_arrow_keydown(&mut self, _: web_sys::KeyboardEvent) {
         self.move_placeholder_down();
+    }
+
+    pub fn on_h_scroll(&mut self, _: web_sys::Event) {
+        self.scroller.set_scroll_left(self.h_scroller.scroll_left());
+        self.paint();
+    }
+
+    pub fn on_v_scroll(&mut self, _: web_sys::Event) {
+        self.scroller.set_scroll_top(self.h_scroller.scroll_top());
+        self.paint();
     }
 
     pub fn on_click(&mut self, event: web_sys::MouseEvent) {
