@@ -283,6 +283,14 @@ impl Rectangle {
   pub fn y_as_px(&self) -> String {
     [self.y.to_string(), "px".to_string()].concat()
   }
+
+  pub fn width_as_px(&self) -> String {
+    [self.width.to_string(), "px".to_string()].concat()
+  }
+
+  pub fn height_as_px(&self) -> String {
+    [self.height.to_string(), "px".to_string()].concat()
+  }
 }
 
 impl Within for Rectangle {

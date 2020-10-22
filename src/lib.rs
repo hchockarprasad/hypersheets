@@ -50,7 +50,7 @@ impl HyperSheet {
         let data_model = DataModel::new();
         let row_manager = RowManager::new();
         let col_manager = ColumnManager::new();
-        let instance = Self {
+        let mut instance = Self {
             data_model,
             row_manager,
             col_manager,
@@ -61,6 +61,12 @@ impl HyperSheet {
             scroller,
             active_cell: None,
         };
+        let mut row = Row::new(3);
+        row.set_height(40);
+        let mut col = Column::new(4);
+        col.set_width(200);
+        instance.row_manager.set_row(row);
+        instance.col_manager.set_column(col);
         instance.paint();
         instance
     }
@@ -85,70 +91,38 @@ impl HyperSheet {
         self.col_manager.get_column(idx)
     }
 
+    /// Expensive operation to perform..
     fn get_last_visible_row(&self, row_offset: usize) -> (u16, usize) {
-        let mut row_count: u16 = (row_offset / 20) as u16;
-        let mut offset = (row_count as usize) * 20;
-        let rows = self.row_manager.get_rows_within(row_count);
-        for row in rows {
-            offset = offset + row.get_height() as usize - 20;
-        }
-        if offset > row_offset {
-            loop {
-                offset = match self.get_row_with_idx(row_count) {
-                    Some(row) => offset - row.get_height() as usize,
-                    None => offset - 20,
-                };
-                row_count -= 1;
-                if offset < row_offset {
-                    break;
-                }
+        let mut row_count = 0;
+        let mut offset = 0;
+        loop {
+            let new_offset = match self.get_row_with_idx(row_count + 1) {
+                Some(row) => offset + row.get_height() as usize,
+                None => offset + 20,
+            };
+            if new_offset >= row_offset {
+                break;
             }
-        } else if offset < row_offset {
-            loop {
-                let new_offset = match self.get_row_with_idx(row_count + 1) {
-                    Some(row) => offset + row.get_height() as usize,
-                    None => offset + 20,
-                };
-                if new_offset >= row_offset {
-                    break;
-                }
-                offset = new_offset;
-                row_count += 1;
-            }
+            offset = new_offset;
+            row_count += 1;
         }
         (row_count, offset)
     }
 
+    /// Expensive operation to perform..
     fn get_last_visible_col(&self, col_offset: usize) -> (u8, usize) {
-        let mut col_count: u8 = (col_offset / 85) as u8;
-        let mut offset = (col_count as usize) * 85;
-        let cols = self.col_manager.get_column(col_count);
-        for col in cols {
-            offset = offset + col.get_width() as usize - 85;
-        }
-        if offset > col_offset {
-            loop {
-                offset = match self.get_col_with_idx(col_count) {
-                    Some(col) => offset - col.get_width() as usize,
-                    None => offset - 85,
-                };
-                col_count -= 1;
-                if offset < col_offset {
-                    break;
-                }
+        let mut col_count = 0;
+        let mut offset = 0;
+        loop {
+            let new_offset = match self.get_col_with_idx(col_count + 1) {
+                Some(col) => offset + col.get_width() as usize,
+                None => offset + 85,
+            };
+            if new_offset >= col_offset {
+                break;
             }
-        } else if offset < col_offset {
-            loop {
-                let new_offset = match self.get_col_with_idx(col_count + 1) {
-                    Some(col) => offset + col.get_width() as usize,
-                    None => offset + 85,
-                };
-                if new_offset >= col_offset {
-                    break;
-                }
-                offset = new_offset;
-                col_count += 1;
-            }
+            offset = new_offset;
+            col_count += 1;
         }
         (col_count, offset)
     }
@@ -208,19 +182,29 @@ impl HyperSheet {
                 (1, 1, Rectangle::new(0.0, 0.0, width as f64, height as f64))
             }
         };
-        let mut cell = Cell::new(next_col_idx, next_row_idx);
-        self.placeholder
-            .style()
-            .set_property("left", &boundary.x_as_px())
-            .unwrap();
-        cell.set_boundary(boundary);
-        self.active_cell = Some(cell);
-        let diff = boundary.right() - self.get_scroller_bounds().right();
-        if diff > 0.0 {
-            let delta_scroll_left = self.get_scroller_bounds().left() as i32 + diff as i32;
-            self.scroller.set_scroll_left(delta_scroll_left);
-            self.h_scroller.set_scroll_left(delta_scroll_left);
-            self.paint();
+        if boundary.right() <= 20000.0 {
+            let mut cell = Cell::new(next_col_idx, next_row_idx);
+            self.placeholder
+                .style()
+                .set_property("left", &boundary.x_as_px())
+                .unwrap();
+            self.placeholder
+                .style()
+                .set_property("width", &boundary.width_as_px())
+                .unwrap();
+            self.placeholder
+                .style()
+                .set_property("height", &boundary.height_as_px())
+                .unwrap();
+            cell.set_boundary(boundary);
+            self.active_cell = Some(cell);
+            let diff = boundary.right() - self.get_scroller_bounds().right();
+            if diff > 0.0 {
+                let delta_scroll_left = self.get_scroller_bounds().left() as i32 + diff as i32;
+                self.scroller.set_scroll_left(delta_scroll_left);
+                self.h_scroller.set_scroll_left(delta_scroll_left);
+                self.paint();
+            }
         }
     }
 
@@ -239,19 +223,29 @@ impl HyperSheet {
                 (1, 1, Rectangle::new(0.0, 0.0, width as f64, height as f64))
             }
         };
-        let mut cell = Cell::new(next_col_idx, next_row_idx);
-        self.placeholder
-            .style()
-            .set_property("left", &boundary.x_as_px())
-            .unwrap();
-        cell.set_boundary(boundary);
-        self.active_cell = Some(cell);
-        let diff = boundary.left() - self.get_scroller_bounds().left();
-        if diff < 0.0 {
-            let delta_scroll_left = self.get_scroller_bounds().left() as i32 + diff as i32;
-            self.scroller.set_scroll_left(delta_scroll_left);
-            self.h_scroller.set_scroll_left(delta_scroll_left);
-            self.paint();
+        if boundary.left() >= 0.0 {
+            let mut cell = Cell::new(next_col_idx, next_row_idx);
+            self.placeholder
+                .style()
+                .set_property("left", &boundary.x_as_px())
+                .unwrap();
+            self.placeholder
+                .style()
+                .set_property("width", &boundary.width_as_px())
+                .unwrap();
+            self.placeholder
+                .style()
+                .set_property("height", &boundary.height_as_px())
+                .unwrap();
+            cell.set_boundary(boundary);
+            self.active_cell = Some(cell);
+            let diff = boundary.left() - self.get_scroller_bounds().left();
+            if diff < 0.0 {
+                let delta_scroll_left = self.get_scroller_bounds().left() as i32 + diff as i32;
+                self.scroller.set_scroll_left(delta_scroll_left);
+                self.h_scroller.set_scroll_left(delta_scroll_left);
+                self.paint();
+            }
         }
     }
 
@@ -270,19 +264,29 @@ impl HyperSheet {
                 (1, 1, Rectangle::new(0.0, 0.0, width as f64, height as f64))
             }
         };
-        let mut cell = Cell::new(next_col_idx, next_row_idx);
-        self.placeholder
-            .style()
-            .set_property("top", &boundary.y_as_px())
-            .unwrap();
-        cell.set_boundary(boundary);
-        self.active_cell = Some(cell);
-        let diff = boundary.top() - self.get_scroller_bounds().top();
-        if diff < 0.0 {
-            let delta_scroll_top = self.get_scroller_bounds().top() as i32 + diff as i32;
-            self.scroller.set_scroll_top(delta_scroll_top);
-            self.v_scroller.set_scroll_top(delta_scroll_top);
-            self.paint();
+        if boundary.top() >= 0.0 {
+            let mut cell = Cell::new(next_col_idx, next_row_idx);
+            self.placeholder
+                .style()
+                .set_property("top", &boundary.y_as_px())
+                .unwrap();
+            self.placeholder
+                .style()
+                .set_property("width", &boundary.width_as_px())
+                .unwrap();
+            self.placeholder
+                .style()
+                .set_property("height", &boundary.height_as_px())
+                .unwrap();
+            cell.set_boundary(boundary);
+            self.active_cell = Some(cell);
+            let diff = boundary.top() - self.get_scroller_bounds().top();
+            if diff < 0.0 {
+                let delta_scroll_top = self.get_scroller_bounds().top() as i32 + diff as i32;
+                self.scroller.set_scroll_top(delta_scroll_top);
+                self.v_scroller.set_scroll_top(delta_scroll_top);
+                self.paint();
+            }
         }
     }
 
@@ -302,19 +306,29 @@ impl HyperSheet {
                 (1, 1, Rectangle::new(0.0, 0.0, width as f64, height as f64))
             }
         };
-        let mut cell = Cell::new(next_col_idx, next_row_idx);
-        self.placeholder
-            .style()
-            .set_property("top", &boundary.y_as_px())
-            .unwrap();
-        cell.set_boundary(boundary);
-        self.active_cell = Some(cell);
-        let diff = boundary.bottom() - self.get_scroller_bounds().bottom();
-        if diff > 0.0 {
-            let delta_scroll_top = self.get_scroller_bounds().top() as i32 + diff as i32;
-            self.scroller.set_scroll_top(delta_scroll_top);
-            self.v_scroller.set_scroll_top(delta_scroll_top);
-            self.paint();
+        if boundary.bottom() <= 1245560.0 {
+            let mut cell = Cell::new(next_col_idx, next_row_idx);
+            self.placeholder
+                .style()
+                .set_property("top", &boundary.y_as_px())
+                .unwrap();
+            self.placeholder
+                .style()
+                .set_property("width", &boundary.width_as_px())
+                .unwrap();
+            self.placeholder
+                .style()
+                .set_property("height", &boundary.height_as_px())
+                .unwrap();
+            cell.set_boundary(boundary);
+            self.active_cell = Some(cell);
+            let diff = boundary.bottom() - self.get_scroller_bounds().bottom();
+            if diff > 0.0 {
+                let delta_scroll_top = self.get_scroller_bounds().top() as i32 + diff as i32;
+                self.scroller.set_scroll_top(delta_scroll_top);
+                self.v_scroller.set_scroll_top(delta_scroll_top);
+                self.paint();
+            }
         }
     }
 
@@ -341,9 +355,10 @@ impl HyperSheet {
             let new_offset = height as f64 + row_offset;
             if new_offset <= cb.bottom() {
                 ctx.begin_path();
-                ctx.rect(0.0, row_offset, 40.0, 20.0);
+                ctx.rect(0.0, row_offset, 40.0, height as f64);
                 ctx.stroke();
-                ctx.fill_text(&row_idx.to_string(), 5.0, row_offset + 15.0).unwrap();
+                ctx.fill_text(&row_idx.to_string(), 5.0, row_offset + 5.0 + (height / 2) as f64)
+                    .unwrap();
                 ctx.begin_path();
                 ctx.set_line_width(0.3);
                 ctx.set_stroke_style(&"#000000".into());
@@ -365,9 +380,10 @@ impl HyperSheet {
 
             let new_offset = width as f64 + col_offset;
             ctx.begin_path();
-            ctx.rect(col_offset, 0.0, 85.0, 20.0);
+            ctx.rect(col_offset, 0.0, width as f64, 20.0);
             ctx.stroke();
-            ctx.fill_text(&col_idx.to_string(), col_offset + 40.0, 15.0).unwrap();
+            ctx.fill_text(&col_idx.to_string(), col_offset + (width / 2) as f64, 15.0)
+                .unwrap();
             ctx.begin_path();
             ctx.set_line_width(0.3);
             ctx.set_stroke_style(&"#000000".into());
@@ -416,17 +432,25 @@ impl HyperSheet {
     pub fn on_click(&mut self, event: web_sys::MouseEvent) {
         let (row_idx, row_offset) = self.get_last_visible_row(event.offset_y() as usize);
         let (col_idx, col_offset) = self.get_last_visible_col(event.offset_x() as usize);
-        self.placeholder
-            .style()
-            .set_property("top", &[row_offset.to_string(), "px".to_string()].concat())
-            .unwrap();
-        self.placeholder
-            .style()
-            .set_property("left", &[col_offset.to_string(), "px".to_string()].concat())
-            .unwrap();
         let mut cell = Cell::new(col_idx + 1, row_idx + 1);
         let (width, height) = self.get_cell_dimension(col_idx + 1, row_idx + 1);
         let boundary = Rectangle::new(col_offset as f64, row_offset as f64, width as f64, height as f64);
+        self.placeholder
+            .style()
+            .set_property("top", &boundary.y_as_px())
+            .unwrap();
+        self.placeholder
+            .style()
+            .set_property("left", &boundary.x_as_px())
+            .unwrap();
+        self.placeholder
+            .style()
+            .set_property("width", &boundary.width_as_px())
+            .unwrap();
+        self.placeholder
+            .style()
+            .set_property("height", &boundary.height_as_px())
+            .unwrap();
         cell.set_boundary(boundary);
         self.active_cell = Some(cell);
     }
