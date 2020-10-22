@@ -31,6 +31,8 @@ features = [
   'HtmlCanvasElement',
   'DomRect',
   'CustomEvent',
-  'CustomEventInit'
+  'CustomEventInit',
+  'KeyboardEvent',
+  'CanvasRenderingContext2d'
 ]
 

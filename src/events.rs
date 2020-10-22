@@ -1,4 +1,5 @@
 use super::*;
+
 use rectangle::{BoundingRect, Point};
 use serde::{Deserialize, Serialize};
 
@@ -56,7 +57,7 @@ impl CustomEvent for web_sys::Event {
   }
 }
 
-impl MousePosition for MouseEvent {
+impl MousePosition for web_sys::MouseEvent {
   fn location(&self, boundary: BoundingRect, zoom_factor: f64) -> Point {
     let x = self.client_x() as f64 / zoom_factor - boundary.left();
     let y = self.client_y() as f64 / zoom_factor - boundary.top();

@@ -70,11 +70,19 @@ impl Point {
   }
 
   pub fn gte(&self, point: Point) -> bool {
-    point.x >= self.x && point.y >= self.y
+    self.x >= point.x && self.y >= point.y
   }
 
   pub fn lte(&self, point: Point) -> bool {
-    point.x <= self.x && point.y <= self.y
+    self.x <= point.x && self.y <= point.y
+  }
+
+  pub fn x(&self) -> f64 {
+    self.x
+  }
+
+  pub fn y(&self) -> f64 {
+    self.y
   }
 }
 
@@ -180,6 +188,18 @@ impl Rectangle {
     elm.within(*self)
   }
 
+  pub fn extent(&self) -> Point {
+    self.extent
+  }
+
+  pub fn get_corner(&self) -> Point {
+    self.corner
+  }
+
+  pub fn get_origin(&self) -> Point {
+    self.origin
+  }
+
   pub fn grow_by(&self, padding: f64) -> Rectangle {
     Rectangle::new(
       self.origin.x + padding,
@@ -247,6 +267,30 @@ impl Rectangle {
       && rect.origin.x < self.corner.x
       && rect.origin.y < self.corner.y
   }
+
+  pub fn x(&self) -> f64 {
+    self.x
+  }
+
+  pub fn y(&self) -> f64 {
+    self.y
+  }
+
+  pub fn x_as_px(&self) -> String {
+    [self.x.to_string(), "px".to_string()].concat()
+  }
+
+  pub fn y_as_px(&self) -> String {
+    [self.y.to_string(), "px".to_string()].concat()
+  }
+
+  pub fn width_as_px(&self) -> String {
+    [self.width.to_string(), "px".to_string()].concat()
+  }
+
+  pub fn height_as_px(&self) -> String {
+    [self.height.to_string(), "px".to_string()].concat()
+  }
 }
 
 impl Within for Rectangle {
@@ -310,5 +354,19 @@ impl BoundingRect {
 
   pub fn height(&self) -> f64 {
     self.height
+  }
+}
+
+#[cfg(test)]
+mod tests {
+
+  use super::Rectangle;
+  #[test]
+  fn intersect() {
+    let rec1 = Rectangle::new(0.0, 0.0, 100.0, 100.0);
+    let rec2 = Rectangle::new(1.0, 1.0, 100.0, 100.0);
+    let rec3 = rec1.intersect(rec2, |a, b| None, None);
+    println!("{:?}", rec3);
+    assert_eq!(2 + 2, 4);
   }
 }

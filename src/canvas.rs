@@ -1,4 +1,3 @@
-use super::super::*;
 use super::*;
 use rectangle::{BoundingRect, Point};
 
@@ -62,9 +61,6 @@ impl Canvas {
       let pt = event.location(elm.get_bounding_rect(), 1.0);
       let ce = event.create_custom_event("test", false, false, CustomEventDetail::new(pt));
       let dispatched = elm.dispatch_event(&ce).unwrap();
-      let mut state = HYPER_SHEETS.lock().unwrap();
-      let x = (*state.get_mut(&1).unwrap()).add();
-      console::log_1(&format!("Mouse down triggerd, {:?}", x.to_string()).into());
     }) as Box<dyn FnMut(_)>);
     document
       .add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())
