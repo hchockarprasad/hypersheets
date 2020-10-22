@@ -184,7 +184,7 @@ impl HyperSheet {
     fn get_scroller_bounds(&self) -> Rectangle {
         let left = self.scroller.scroll_left() as f64;
         let top = self.scroller.scroll_top() as f64;
-        Rectangle::new(left, top, left + 560.0, top + 380.0)
+        Rectangle::new(left, top, 560.0, 380.0)
     }
 
     fn move_placeholder_right(&mut self) {
@@ -192,10 +192,10 @@ impl HyperSheet {
             Some(mut cell) => {
                 let next_col_idx = cell.get_col_idx() + 1;
                 let next_row_idx = cell.get_row_idx();
-                let corner_x = cell.get_boundary().unwrap().get_corner().x();
-                let origin_y = cell.get_boundary().unwrap().get_origin().y();
+                let left = cell.get_boundary().unwrap().right();
+                let top = cell.get_boundary().unwrap().top();
                 let (width, height) = self.get_cell_dimension(next_col_idx, next_row_idx);
-                let boundary = Rectangle::new(corner_x, origin_y, width as f64, height as f64);
+                let boundary = Rectangle::new(left, top, width as f64, height as f64);
                 (next_col_idx, next_row_idx, boundary)
             }
             None => {
@@ -208,10 +208,12 @@ impl HyperSheet {
             .style()
             .set_property("left", &boundary.x_as_px())
             .unwrap();
-        cell.set_bounday(boundary);
+        cell.set_boundary(boundary);
         self.active_cell = Some(cell);
-        if !boundary.within(self.get_scroller_bounds()) {
-            web_sys::console::log_1(&"Needs Repaint".into());
+        let diff = boundary.right() - self.get_scroller_bounds().right();
+        if diff > 0.0 {
+            self.scroller
+                .set_scroll_left(self.get_scroller_bounds().left() as i32 + diff as i32);
         }
     }
 
@@ -235,10 +237,12 @@ impl HyperSheet {
             .style()
             .set_property("left", &boundary.x_as_px())
             .unwrap();
-        cell.set_bounday(boundary);
+        cell.set_boundary(boundary);
         self.active_cell = Some(cell);
-        if !boundary.within(self.get_scroller_bounds()) {
-            web_sys::console::log_1(&"Needs Repaint".into());
+        let diff = boundary.left() - self.get_scroller_bounds().left();
+        if diff < 0.0 {
+            self.scroller
+                .set_scroll_left(self.get_scroller_bounds().left() as i32 + diff as i32);
         }
     }
 
@@ -262,10 +266,12 @@ impl HyperSheet {
             .style()
             .set_property("top", &boundary.y_as_px())
             .unwrap();
-        cell.set_bounday(boundary);
+        cell.set_boundary(boundary);
         self.active_cell = Some(cell);
-        if !boundary.within(self.get_scroller_bounds()) {
-            web_sys::console::log_1(&"Needs Repaint".into());
+        let diff = boundary.top() - self.get_scroller_bounds().top();
+        if diff < 0.0 {
+            self.scroller
+                .set_scroll_top(self.get_scroller_bounds().top() as i32 + diff as i32);
         }
     }
 
@@ -274,10 +280,10 @@ impl HyperSheet {
             Some(mut cell) => {
                 let next_col_idx = cell.get_col_idx();
                 let next_row_idx = cell.get_row_idx() + 1;
-                let origin_x = cell.get_boundary().unwrap().get_origin().x();
-                let corner_y = cell.get_boundary().unwrap().get_corner().y();
+                let left = cell.get_boundary().unwrap().left();
+                let bottom = cell.get_boundary().unwrap().bottom();
                 let (width, height) = self.get_cell_dimension(next_col_idx, next_row_idx);
-                let boundary = Rectangle::new(origin_x, corner_y, width as f64, height as f64);
+                let boundary = Rectangle::new(left, bottom, width as f64, height as f64);
                 (next_col_idx, next_row_idx, boundary)
             }
             None => {
@@ -290,15 +296,13 @@ impl HyperSheet {
             .style()
             .set_property("top", &boundary.y_as_px())
             .unwrap();
-        cell.set_bounday(boundary);
+        cell.set_boundary(boundary);
         self.active_cell = Some(cell);
-        let diff = boundary.get_corner().y() - self.get_scroller_bounds().get_corner().y();
-        web_sys::console::log_1(&self.get_scroller_bounds().get_corner().y().to_string().into());
+        let diff = boundary.bottom() - self.get_scroller_bounds().bottom();
         if diff > 0.0 {
-            self.scroller.set_scroll_top(self.scroller.scroll_top() + 20);
+            self.scroller
+                .set_scroll_top(self.get_scroller_bounds().top() as i32 + diff as i32);
         }
-        web_sys::console::log_1(&boundary.get_corner().y().to_string().into());
-        web_sys::console::log_1(&self.get_scroller_bounds().get_corner().y().to_string().into());
     }
 
     fn paint(&self) {}

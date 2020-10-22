@@ -61,7 +61,7 @@ impl Cell {
     self.height = height;
   }
 
-  pub fn set_bounday(&mut self, boundary: Rectangle) {
+  pub fn set_boundary(&mut self, boundary: Rectangle) {
     self.boundary = Some(boundary)
   }
 
