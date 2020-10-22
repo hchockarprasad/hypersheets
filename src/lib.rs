@@ -217,8 +217,9 @@ impl HyperSheet {
         self.active_cell = Some(cell);
         let diff = boundary.right() - self.get_scroller_bounds().right();
         if diff > 0.0 {
-            self.scroller
-                .set_scroll_left(self.get_scroller_bounds().left() as i32 + diff as i32);
+            let delta_scroll_left = self.get_scroller_bounds().left() as i32 + diff as i32;
+            self.scroller.set_scroll_left(delta_scroll_left);
+            self.h_scroller.set_scroll_left(delta_scroll_left);
             self.paint();
         }
     }
@@ -247,8 +248,9 @@ impl HyperSheet {
         self.active_cell = Some(cell);
         let diff = boundary.left() - self.get_scroller_bounds().left();
         if diff < 0.0 {
-            self.scroller
-                .set_scroll_left(self.get_scroller_bounds().left() as i32 + diff as i32);
+            let delta_scroll_left = self.get_scroller_bounds().left() as i32 + diff as i32;
+            self.scroller.set_scroll_left(delta_scroll_left);
+            self.h_scroller.set_scroll_left(delta_scroll_left);
             self.paint();
         }
     }
@@ -277,8 +279,9 @@ impl HyperSheet {
         self.active_cell = Some(cell);
         let diff = boundary.top() - self.get_scroller_bounds().top();
         if diff < 0.0 {
-            self.scroller
-                .set_scroll_top(self.get_scroller_bounds().top() as i32 + diff as i32);
+            let delta_scroll_top = self.get_scroller_bounds().top() as i32 + diff as i32;
+            self.scroller.set_scroll_top(delta_scroll_top);
+            self.v_scroller.set_scroll_top(delta_scroll_top);
             self.paint();
         }
     }
@@ -308,8 +311,9 @@ impl HyperSheet {
         self.active_cell = Some(cell);
         let diff = boundary.bottom() - self.get_scroller_bounds().bottom();
         if diff > 0.0 {
-            self.scroller
-                .set_scroll_top(self.get_scroller_bounds().top() as i32 + diff as i32);
+            let delta_scroll_top = self.get_scroller_bounds().top() as i32 + diff as i32;
+            self.scroller.set_scroll_top(delta_scroll_top);
+            self.v_scroller.set_scroll_top(delta_scroll_top);
             self.paint();
         }
     }
@@ -405,7 +409,7 @@ impl HyperSheet {
     }
 
     pub fn on_v_scroll(&mut self, _: web_sys::Event) {
-        self.scroller.set_scroll_top(self.h_scroller.scroll_top());
+        self.scroller.set_scroll_top(self.v_scroller.scroll_top());
         self.paint();
     }
 
