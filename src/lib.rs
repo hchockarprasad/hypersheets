@@ -10,23 +10,17 @@ mod properties;
 mod row;
 mod scroll;
 
-use canvas::{Canvas, CanvasHelper};
 use cell::Cell;
-use celleditor::CellEditor;
 use column::{Column, ColumnManager};
 use events::{CustomEvent, CustomEventDetail, MousePosition};
-use js_sys::Array;
 use model::DataModel;
-use properties::HyperSheetProperties;
-use rectangle::{Point, Rectangle, Within};
+use rectangle::Rectangle;
 use row::{Row, RowManager};
-use scroll::ScrollBar;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 #[wasm_bindgen]
 pub struct HyperSheet {
-    data_model: DataModel,
     row_manager: RowManager,
     col_manager: ColumnManager,
     canvas: web_sys::HtmlCanvasElement,
@@ -51,7 +45,6 @@ impl HyperSheet {
         let row_manager = RowManager::new();
         let col_manager = ColumnManager::new();
         let mut instance = Self {
-            data_model,
             row_manager,
             col_manager,
             canvas,
@@ -69,18 +62,6 @@ impl HyperSheet {
         instance.col_manager.set_column(col);
         instance.paint();
         instance
-    }
-
-    fn update_row_manager(&mut self, rows: Vec<Row>) {
-        for row in rows {
-            self.row_manager.set_row(row);
-        }
-    }
-
-    fn add_cells(&mut self, cells: Vec<Cell>) {
-        for cell in cells {
-            self.data_model.set_cell(cell);
-        }
     }
 
     fn get_row_with_idx(&self, idx: u16) -> Option<&Row> {
@@ -156,10 +137,6 @@ impl HyperSheet {
         let left = self.scroller.scroll_left() as f64;
         let top = self.scroller.scroll_top() as f64;
         Rectangle::new(left, top, 560.0, 380.0)
-    }
-
-    fn get_container_bounds(&self) -> Rectangle {
-        Rectangle::new(0.0, 0.0, 560.0, 380.0)
     }
 
     fn get_canvas_bounds(&self) -> Rectangle {
